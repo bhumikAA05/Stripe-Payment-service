@@ -1,0 +1,84 @@
+spring:
+  application:
+    name: stripe-provider-service
+  profiles:
+    active: dev
+
+server:
+  port: 8081
+
+stripe:
+  api:
+    key: ${STRIPE_SECRET_KEY:sk_test_your_test_key_here}
+  webhook:
+    secret: ${STRIPE_WEBHOOK_SECRET:whsec_your_webhook_secret_here}
+
+processing:
+  service:
+    url: ${PROCESSING_SERVICE_URL:http://localhost:8082}
+    username: ${PROCESSING_SERVICE_USER:admin}
+    password: ${PROCESSING_SERVICE_PASS:secret}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,circuitbreakers
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    com.stripe.payment: DEBUG
+    com.stripe: INFO
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      stripeApi:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  application:
+    name: stripe-provider-service-dev
+
+logging:
+  level:
+    root: INFO
+    com.stripe.payment: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+server:
+  port: 8081
+
+logging:
+  level:
+    root: WARN
+    com.stripe.payment: INFO
